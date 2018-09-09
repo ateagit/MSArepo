@@ -1,25 +1,42 @@
 import * as React from 'react';
 import Dropzone from 'react-dropzone'
-import Loader from 'react-loader-spinner'
+//import Loader from 'react-loader-spinner'
 import './App.css';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import {ThemeContext, themes} from './theme-context';
+import { Button } from '@material-ui/core';
 
 interface IState {
   imageFiles: any[],
   results: any,
-  dropzone: any
+  dropzone: any,
+  theme: any,
+  toggleTheme: any
 }
 
 
 export default class App extends React.Component<{}, IState> {
   constructor(props: any) {
-    super(props)
+    super(props);
+  
     this.state = {
       imageFiles: [],
       results: "",
-      dropzone: this.onDrop.bind(this)
-    }
+      dropzone: this.onDrop.bind(this),
+  
+      theme: themes.dark,
+      toggleTheme: this.toggleTheme(),
+    };
   }
+  
+  public toggleTheme = () => {
+    this.setState(state => ({
+      theme:
+        state.theme === themes.light
+          ? themes.dark
+          : themes.light,
+    }));
+  };
   public onDrop(files: any) {
     this.setState({
       imageFiles: files,
@@ -57,27 +74,39 @@ export default class App extends React.Component<{}, IState> {
   }
   public render() {
     return (
-      <div className="container-fluid">
-        <div className="centreText">
-          <div className="dropZone">
-            <Dropzone onDrop={this.state.dropzone} style={{position: "relative"}}>
-              <div style={{height: '50vh'}}>
+
+      <div className="container-fluid" >
+        <ThemeContext.Provider value={this.state}>
+          <ThemeContext.Consumer>
+            {theme => (
+              <div className="centreText" style={{backgroundColor: theme.theme.background, color: theme.theme.foreground}}>
+                <div className="centreText">
+                <div className="dropZone">
+                  <Dropzone onDrop={this.state.dropzone} style={{position: "relative"}}>
+                    <div style={{height: '50vh'}}>
+                      {
+                        this.state.imageFiles.length > 0 ? 
+                          <div>{this.state.imageFiles.map((file) => <img className="image" key={file.name} src={file.preview} /> )}</div> :
+                          <p>Try dropping some files here, or click to select files to upload.</p>
+                      }  
+                    </div>
+                  </Dropzone>
+                </div>
+                <div  className="dank">
                 {
-                  this.state.imageFiles.length > 0 ? 
-                    <div>{this.state.imageFiles.map((file) => <img className="image" key={file.name} src={file.preview} /> )}</div> :
-                    <p>Try dropping some files here, or click to select files to upload.</p>
-                }  
+                  this.state.results === "" && this.state.imageFiles.length > 0 ?
+                  <CircularProgress thickness={3} /> :
+                  <p>{this.state.results}</p>
+                }
+                </div>
+                </div>
               </div>
-            </Dropzone>
+            )}
+          </ThemeContext.Consumer>
+          <div>
+              <Button onClick={this.toggleTheme}>Change Theme</Button>
           </div>
-          <div  className="dank">
-          {
-            this.state.results === "" && this.state.imageFiles.length > 0 ?
-            <CircularProgress thickness={3} /> :
-            <p>{this.state.results}</p>
-          }
-          </div>
-        </div>
+        </ThemeContext.Provider>
       </div>
     );
   }
